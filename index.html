@@ -1,0 +1,823 @@
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  html, body {
+    background: #0F1116;
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+  }
+  body { padding: 0 12px; }
+
+  .tr {
+    --bg: #0F1116; --card: #191C24; --card2: #222732; --line: #2C313D;
+    --text: #EDEBE6; --dim: #878DA0; --gold: #E5B93C; --green: #35A86B;
+    --red: #DF4A44; --blue: #3E8BD9;
+    background: var(--bg); color: var(--text);
+    font-family: 'Archivo', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px; line-height: 1.5; padding: 24px 8px 40px; border-radius: 0;
+    max-width: 640px; margin: 0 auto; min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .tr * { box-sizing: border-box; }
+  .tr h1 { margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -0.02em; }
+  .tr h1 span { color: var(--gold); }
+  .tr .sub { margin: 3px 0 0; font-size: 13px; color: var(--dim); }
+  .tr .cap { font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+  .tr .n { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  .tr .tabs { display: flex; gap: 4px; margin: 16px 0 0; border-bottom: 1px solid var(--line); }
+  .tr .tab { background: none; border: none; border-bottom: 2px solid transparent;
+    color: var(--dim); font-family: 'Archivo', sans-serif; font-size: 14px;
+    font-weight: 600; padding: 9px 14px; cursor: pointer; margin-bottom: -1px; }
+  .tr .tab.on { color: var(--gold); border-bottom-color: var(--gold); }
+  .tr .tab:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+  .tr .pane { display: none; } .tr .pane.on { display: block; }
+
+  .tr .card { background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 18px; margin-top: 14px; }
+  .tr h2 { margin: 0 0 3px; font-size: 15px; font-weight: 600; }
+  .tr .hint { margin: 0 0 12px; font-size: 13px; color: var(--dim); }
+
+  /* ---- drill ---- */
+  .tr .scorebar { display: flex; justify-content: space-between; align-items: baseline;
+    gap: 10px; margin-bottom: 4px; }
+  .tr .streak { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--gold); }
+
+  .tr .situation { text-align: center; padding: 6px 0 2px; }
+  .tr .sit-line { font-size: 14px; color: var(--dim); }
+  .tr .sit-line b { color: var(--text); font-weight: 600; }
+
+  .tr .hand { display: flex; justify-content: center; gap: 10px; margin: 14px 0; }
+  .tr .pc { width: 62px; height: 86px; border-radius: 8px; background: #F4F2EC;
+    color: #14161C; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; font-family: 'Archivo', sans-serif; font-weight: 800;
+    font-size: 26px; line-height: 1; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+  .tr .pc.red { color: #C8322C; }
+  .tr .pc .s { font-size: 24px; margin-top: 2px; font-weight: 400; }
+
+  .tr .qbox { text-align: center; font-size: 16px; font-weight: 600; margin: 4px 0 14px; }
+  .tr .choices { display: grid; gap: 9px; }
+  .tr .ch { padding: 14px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--card2); color: var(--text); cursor: pointer;
+    font-family: 'Archivo', sans-serif; font-size: 15px; font-weight: 600; width: 100%; }
+  .tr .ch:hover:not(:disabled) { border-color: #3C4354; }
+  .tr .ch:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .tr .ch:disabled { cursor: default; }
+  .tr .ch.right { border-color: var(--green); color: var(--green); background: rgba(53,168,107,0.1); }
+  .tr .ch.wrong { border-color: var(--red); color: var(--red); background: rgba(223,74,68,0.1); }
+  .tr .ch.dim { opacity: 0.45; }
+  @media (min-width: 460px) { .tr .choices.two-up { grid-template-columns: 1fr 1fr; } }
+
+  .tr .fb { margin-top: 13px; padding: 13px 15px; border-radius: 10px;
+    background: var(--card2); border: 1px solid var(--line); font-size: 13px; }
+  .tr .fb .verdict { font-weight: 700; font-size: 14px; margin-bottom: 3px; }
+  .tr .fb.ok .verdict { color: var(--green); }
+  .tr .fb.no .verdict { color: var(--red); }
+  .tr .fb.mid .verdict { color: var(--gold); }
+  .tr .fb .why { color: var(--dim); }
+
+  .tr button.go { width: 100%; background: var(--gold); color: #14161C; border: none;
+    border-radius: 10px; padding: 13px; font-family: 'Archivo', sans-serif;
+    font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+  .tr button.go:hover { background: #F1C851; }
+  .tr button.go.alt { background: var(--card2); color: var(--text); border: 1px solid var(--line); }
+  .tr button.go.alt:hover { background: #2A303D; }
+
+  /* ---- progress ---- */
+  .tr .tiles { display: grid; grid-template-columns: repeat(auto-fit,minmax(110px,1fr)); gap: 9px; }
+  .tr .tile { background: var(--card2); border-radius: 9px; padding: 12px 13px; }
+  .tr .tile-v { font-family: 'JetBrains Mono', monospace; font-size: 21px;
+    font-weight: 700; letter-spacing: -0.02em; margin-top: 3px; }
+  .tr .tile-s { font-size: 11px; color: var(--dim); margin-top: 2px; }
+  .tr .pos { color: var(--green); } .tr .neg { color: var(--red); }
+
+  .tr .brow { display: grid; grid-template-columns: 118px 1fr 60px;
+    align-items: center; gap: 10px; margin-bottom: 8px; }
+  .tr .btrack { height: 9px; background: #1B1F29; border-radius: 5px; overflow: hidden; }
+  .tr .bfill { height: 100%; border-radius: 5px; }
+  .tr .bval { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .tr .blab { font-size: 13px; }
+  .tr svg { display: block; width: 100%; height: auto; }
+
+  /* ---- session log ---- */
+  .tr .verdicts { display: grid; gap: 8px; }
+  .tr .v { text-align: left; padding: 13px 15px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--card2); color: var(--text);
+    cursor: pointer; font-family: 'Archivo', sans-serif; font-size: 15px; font-weight: 600; width: 100%; }
+  .tr .v small { display: block; font-weight: 400; font-size: 12px; color: var(--dim); margin-top: 1px; }
+  .tr .v:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .tr .v[data-v="good"]:hover { border-color: var(--green); }
+  .tr .v[data-v="mixed"]:hover { border-color: var(--gold); }
+  .tr .v[data-v="tilt"]:hover { border-color: var(--red); }
+
+  .tr .row { padding: 10px 0; border-bottom: 1px solid #232733; display: flex; gap: 10px; align-items: center; }
+  .tr .row:last-child { border-bottom: none; }
+  .tr .bar3 { width: 3px; border-radius: 2px; align-self: stretch; flex: none; }
+  .tr .row-main { flex: 1; min-width: 0; font-size: 14px; }
+  .tr .row-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--dim); }
+  .tr .quiet { background: none; border: none; color: var(--dim); cursor: pointer;
+    font-family: 'Archivo', sans-serif; font-size: 12px; padding: 4px 6px; border-radius: 5px; }
+  .tr .quiet:hover { color: var(--text); background: var(--card2); }
+
+  /* ---- results form ---- */
+  .tr label.f { display: block; margin-bottom: 11px; }
+  .tr label.f > span { display: block; font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--dim); margin-bottom: 5px; }
+  .tr input, .tr select { width: 100%; background: var(--bg); border: 1px solid var(--line);
+    color: var(--text); border-radius: 8px; padding: 9px 11px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+  .tr input:focus, .tr select:focus { outline: 2px solid var(--gold);
+    outline-offset: 1px; border-color: transparent; }
+  .tr .two { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+  .tr .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .tr .seg button { padding: 11px; border-radius: 9px; border: 1px solid var(--line);
+    background: var(--card2); color: var(--dim); cursor: pointer;
+    font-family: 'Archivo', sans-serif; font-size: 14px; font-weight: 600; }
+  .tr .seg button.on { color: var(--gold); border-color: var(--gold); background: rgba(229,185,60,0.09); }
+  .tr .seg button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .tr .msg { font-size: 12px; margin-top: 9px; min-height: 16px; }
+
+  .tr .empty { color: var(--dim); font-size: 14px; padding: 6px 0; }
+  .tr .foot { display: flex; justify-content: space-between; align-items: center;
+    margin-top: 14px; font-size: 12px; color: var(--dim); }
+  .tr .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--gold); color: #14161C; padding: 10px 18px; border-radius: 8px;
+    font-weight: 700; font-size: 13px; opacity: 0; pointer-events: none;
+    transition: opacity 180ms ease; z-index: 40; }
+  .tr .toast.show { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .tr * { transition: none !important; } }
+</style>
+
+<div class="tr">
+  <h1>Poker <span>Reps</span></h1>
+  <p class="sub">No logging. Answer spots, get scored, watch the score climb.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab on" data-p="drill" role="tab">Drill</button>
+    <button class="tab" data-p="prog" role="tab">Progress</button>
+    <button class="tab" data-p="log" role="tab">Sessions</button>
+    <button class="tab" data-p="res" role="tab">Results</button>
+  </div>
+
+  <!-- ============ DRILL ============ -->
+  <div class="pane on" id="p-drill">
+    <div class="card">
+      <div class="scorebar">
+        <span class="cap" id="cat-label">—</span>
+        <span class="streak" id="streak"></span>
+      </div>
+      <div id="q"></div>
+    </div>
+    <div class="card">
+      <p class="hint" style="margin:0">Ten a day beats a hundred once a month. The answers come from standard opening and shove charts — where a hand sits right on the boundary, both answers are counted right and the feedback says so.</p>
+    </div>
+  </div>
+
+  <!-- ============ PROGRESS ============ -->
+  <div class="pane" id="p-prog">
+    <div class="card">
+      <h2>Accuracy over time</h2>
+      <p class="hint">Each bar is 20 drills, oldest on the left.</p>
+      <div id="trend"></div>
+    </div>
+    <div class="card">
+      <h2>By category</h2>
+      <p class="hint">Your last 60 answers in each.</p>
+      <div id="cats"></div>
+    </div>
+    <div class="card">
+      <h2>Numbers</h2>
+      <div class="tiles" id="tiles"></div>
+    </div>
+    <div class="card" id="advice-card">
+      <h2>What to work on</h2>
+      <div id="advice"></div>
+    </div>
+  </div>
+
+  <!-- ============ SESSIONS ============ -->
+  <div class="pane" id="p-log">
+    <div class="card">
+      <h2>How did that one go?</h2>
+      <p class="hint">One tap after you bust. That is the whole thing.</p>
+      <div class="verdicts">
+        <button class="v" data-v="good">Played well<small>Decisions were sound, result was the result</small></button>
+        <button class="v" data-v="mixed">Mixed<small>A couple of spots I was guessing in</small></button>
+        <button class="v" data-v="tilt">Lost the plot<small>Tilt, boredom, playing too many tables</small></button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Recent sessions</h2>
+      <div id="sessions"></div>
+    </div>
+  </div>
+
+  <!-- ============ RESULTS ============ -->
+  <div class="pane" id="p-res">
+    <div class="card">
+      <h2>Log a tournament</h2>
+      <p class="hint">Six fields, once per event. Freerolls are kept separate from cash — mixing them makes both numbers lie.</p>
+
+      <div class="seg" id="seg-type">
+        <button data-t="cash" class="on">Cash buy-in</button>
+        <button data-t="free">Freeroll</button>
+      </div>
+
+      <div class="two">
+        <label class="f"><span>Date</span><input type="date" id="r-date"></label>
+        <label class="f" id="wrap-buyin"><span>Buy-in</span><input type="number" id="r-buyin" min="0" step="0.01" placeholder="1.10"></label>
+      </div>
+      <div class="two">
+        <label class="f"><span>Players in field</span><input type="number" id="r-field" min="1" step="1" placeholder="1240"></label>
+        <label class="f"><span>You finished</span><input type="number" id="r-finish" min="1" step="1" placeholder="184"></label>
+      </div>
+      <div class="two">
+        <label class="f"><span>Starting stack (bb)</span><input type="number" id="r-bb" min="1" step="1" placeholder="100"></label>
+        <label class="f"><span>Won</span><input type="number" id="r-won" min="0" step="0.01" placeholder="0"></label>
+      </div>
+      <label class="f"><span>CoinPoker rank — optional</span><input type="number" id="r-rank" min="1" step="1" placeholder="leave blank if unchanged"></label>
+
+      <button class="go" id="r-save">Save result</button>
+      <div class="msg" id="r-msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Finish percentile</h2>
+      <p class="hint">Lower is better. This moves years before ROI does — it counts every event, not just the ones you cash.</p>
+      <div id="r-chart"></div>
+      <div class="key" style="display:flex;gap:14px;font-size:12px;color:var(--dim);margin-top:8px">
+        <span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#E5B93C;margin-right:5px"></i>Cash games</span>
+        <span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3E8BD9;margin-right:5px"></i>Freerolls</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Split</h2>
+      <div id="r-split"></div>
+    </div>
+
+    <div class="card">
+      <h2>CoinPoker rank</h2>
+      <p class="hint">Their number, not mine. Worth watching, worth not obsessing over.</p>
+      <div id="r-rankchart"></div>
+    </div>
+
+    <div class="card">
+      <h2>Recent results</h2>
+      <div id="r-list"></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span id="count"></span>
+    <span><button class="quiet" id="clear">Reset all data</button></span>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function () {
+  const KEY = 'drillsergeant:v1';
+  const RANKS = '23456789TJQKA';
+  const SUITS = [['s','♠',0],['h','♥',1],['d','♦',1],['c','♣',0]];
+
+  /* ---------- hand orderings ---------- */
+  const RFI_ORDER = ('AA KK QQ AKs JJ AQs TT AKo AJs KQs 99 ATs AQo KJs 88 QJs KTs A9s AJo ' +
+    'QTs KQo 77 JTs A8s K9s ATo A7s Q9s J9s KJo 66 T9s A5s QJo A6s A4s Q8s K8s T8s ' +
+    'A3s J8s 55 KTo 98s A2s QTo K7s 97s JTo 87s Q7s K6s 44 A9o 86s 96s T7s K5s Q6s ' +
+    '76s J7s 33 K4s Q5s A8o 65s 85s 22 K3s J6s 75s Q4s T6s 54s A7o K2s Q3s J5s 95s ' +
+    '64s A5o Q2s J4s 74s 53s T5s A6o J3s 84s 43s A4o 63s J2s T4s 94s 52s A3o T3s 73s ' +
+    '42s 62s A2o T2s 32s 93s 83s 92s K9o Q9o 72s J9o T9o 98o K8o Q8o J8o 87o T8o K7o ' +
+    '97o 76o Q7o J7o K6o 86o T7o 65o K5o Q6o 96o 75o J6o K4o 54o 85o T6o Q5o K3o 64o ' +
+    '95o J5o K2o 53o Q4o 74o T5o 84o J4o 43o Q3o 63o 94o T4o 52o J3o 73o Q2o 42o T3o ' +
+    '62o 83o J2o 32o 93o 92o 82o 82s T2o 72o').split(/\s+/);
+
+  // shove ranges favour aces and pairs over suited connectors
+  const PUSH_ORDER = ('AA KK QQ JJ AKs AKo TT AQs AQo 99 AJs AJo ATs KQs 88 ATo A9s KQo ' +
+    'KJs A8s 77 A9o A7s KTs QJs A5s A6s A4s A8o A3s KJo A2s 66 K9s QTs A7o JTs KTo ' +
+    'A6o A5o 55 K8s QJo T9s K7s A4o Q9s K6s A3o 44 K5s J9s QTo A2o K4s 98s K9o Q8s ' +
+    'K3s T8s 33 K2s J8s JTo 87s Q7s Q6s 97s K8o 22 Q5s 76s T7s Q4s J7s 86s Q3s K7o ' +
+    '65s Q2s 96s J6s T9o 75s 54s J5s 85s K6o Q9o J4s T6s 64s 95s J3s K5o 98o 53s J2s ' +
+    '74s T5s 84s 43s K4o T4s 63s 94s J9o Q8o 52s T3s 73s K3o 42s T2s 62s 87o 83s K2o ' +
+    '32s 93s 92s 82s 72s Q7o J8o T8o 97o Q6o 76o 86o J7o Q5o 65o T7o 96o 75o Q4o J6o ' +
+    '54o 85o T6o Q3o 64o 95o J5o Q2o 53o 74o T5o J4o 84o 43o 63o 94o T4o J3o 52o 73o ' +
+    'T3o J2o 42o 62o 83o 32o 93o 92o 82o T2o 72o').split(/\s+/);
+
+  const RFI = { UTG: 14, MP: 19, CO: 27, BTN: 45, SB: 42 };
+  const RFI_NAME = { UTG: 'under the gun', MP: 'middle position', CO: 'the cutoff', BTN: 'the button', SB: 'the small blind' };
+  const PUSH = {
+    UTG: { 6: 22, 8: 17, 10: 14, 12: 12, 15: 10 },
+    MP:  { 6: 28, 8: 22, 10: 18, 12: 15, 15: 12 },
+    CO:  { 6: 38, 8: 31, 10: 26, 12: 22, 15: 17 },
+    BTN: { 6: 55, 8: 47, 10: 40, 12: 34, 15: 28 },
+    SB:  { 6: 62, 8: 53, 10: 46, 12: 39, 15: 32 }
+  };
+  const CATS = { rfi: 'Preflop opening', push: 'Push or fold', odds: 'Pot odds and equity' };
+  const STUDY = {
+    rfi: ['Preflop opening ranges', 'https://pokercoaching.com/'],
+    push: ['Shove/fold ranges', 'https://www.icmpoker.com/icmizer/'],
+    odds: ['Pot odds and equity', 'https://www.youtube.com/@JonathanLittlePoker']
+  };
+
+  const combosOf = h => (h.length === 2 ? 6 : (h[2] === 's' ? 4 : 12));
+
+  function percentile(hand, order) {
+    let acc = 0;
+    for (const h of order) {
+      const c = combosOf(h);
+      if (h === hand) return ((acc + c / 2) / 1326) * 100;
+      acc += c;
+    }
+    return 100;
+  }
+
+  function randomHand() {
+    const a = (Math.random() * 13) | 0, b = (Math.random() * 13) | 0;
+    if (a === b) return RANKS[a] + RANKS[a];
+    const hi = RANKS[Math.max(a, b)], lo = RANKS[Math.min(a, b)];
+    return hi + lo + (Math.random() < 0.25 ? 's' : 'o');
+  }
+
+  function dealSuits(hand) {
+    const pick = () => SUITS[(Math.random() * 4) | 0];
+    if (hand.length === 2) {
+      let s1 = pick(), s2 = pick();
+      while (s2 === s1) s2 = pick();
+      return [[hand[0], s1], [hand[1], s2]];
+    }
+    if (hand[2] === 's') { const s = pick(); return [[hand[0], s], [hand[1], s]]; }
+    let s1 = pick(), s2 = pick();
+    while (s2 === s1) s2 = pick();
+    return [[hand[0], s1], [hand[1], s2]];
+  }
+
+  const cardHTML = ([r, s]) =>
+    `<div class="pc${s[2] ? ' red' : ''}"><div>${r}</div><div class="s">${s[1]}</div></div>`;
+
+  /* Works both inside Claude (window.storage) and as a standalone file
+     on your own machine (localStorage). Prefers Claude's when present. */
+  const store = {
+    async get(k) {
+      if (window.storage) return await window.storage.get(k);
+      const v = localStorage.getItem(k);
+      return v ? { key: k, value: v } : null;
+    },
+    async set(k, v) {
+      if (window.storage) return await window.storage.set(k, v);
+      localStorage.setItem(k, v);
+      return { key: k, value: v };
+    },
+    async delete(k) {
+      if (window.storage) return await window.storage.delete(k);
+      localStorage.removeItem(k);
+      return { key: k, deleted: true };
+    }
+  };
+
+  let data = { attempts: [], sessions: [], results: [] };
+  let current = null, answered = false;
+  const $ = id => document.getElementById(id);
+
+  function toast(m) {
+    const t = $('toast'); t.textContent = m; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1600);
+  }
+  async function save() {
+    try { await store.set(KEY, JSON.stringify(data)); }
+    catch (e) { toast('Saved for this session only'); }
+  }
+  async function load() {
+    try {
+      const r = await store.get(KEY);
+      if (r && r.value) {
+        const p = JSON.parse(r.value);
+        if (Array.isArray(p.attempts)) data.attempts = p.attempts;
+        if (Array.isArray(p.sessions)) data.sessions = p.sessions;
+        if (Array.isArray(p.results)) data.results = p.results;
+      }
+    } catch (e) {}
+  }
+
+  /* ---------- question builders ---------- */
+  function qRFI() {
+    const positions = Object.keys(RFI);
+    const pos = positions[(Math.random() * positions.length) | 0];
+    const hand = randomHand();
+    const pct = percentile(hand, RFI_ORDER);
+    const thresh = RFI[pos];
+    const margin = pct - thresh;
+    return {
+      cat: 'rfi',
+      cards: dealSuits(hand),
+      sit: `Folded to you in <b>${RFI_NAME[pos]}</b> · everyone has 40bb`,
+      q: 'Open-raise or fold?',
+      choices: ['Raise', 'Fold'],
+      correct: margin <= 0 ? 0 : 1,
+      marginal: Math.abs(margin) <= 3.5,
+      why: () => {
+        const inRange = margin <= 0;
+        return `${hand} sits around the top ${pct.toFixed(0)}% of hands. A standard opening range from ${RFI_NAME[pos]} is roughly the top ${thresh}%, so this is ${inRange ? 'a raise' : 'a fold'}. Positions to your left are what set that width — more players still to act means fewer hands you can profitably open.`;
+      }
+    };
+  }
+
+  function qPush() {
+    const positions = Object.keys(PUSH);
+    const pos = positions[(Math.random() * positions.length) | 0];
+    const stacks = [6, 8, 10, 12, 15];
+    const bb = stacks[(Math.random() * stacks.length) | 0];
+    const hand = randomHand();
+    const pct = percentile(hand, PUSH_ORDER);
+    const thresh = PUSH[pos][bb];
+    const margin = pct - thresh;
+    return {
+      cat: 'push',
+      cards: dealSuits(hand),
+      sit: `<b>${bb}bb</b> in ${RFI_NAME[pos]} · folded to you · late in the tournament`,
+      q: 'Shove or fold?',
+      choices: ['Shove', 'Fold'],
+      correct: margin <= 0 ? 0 : 1,
+      marginal: Math.abs(margin) <= 4,
+      why: () => {
+        const inRange = margin <= 0;
+        return `${hand} is about the top ${pct.toFixed(0)}% by shoving strength. From ${RFI_NAME[pos]} at ${bb}bb you can jam roughly the top ${thresh}%, so this is ${inRange ? 'a shove' : 'a fold'}. Shove ranges favour aces and pairs over suited connectors — you want raw showdown value and blockers, not implied odds you will never realise.`;
+      }
+    };
+  }
+
+  function qOdds() {
+    const kind = Math.random();
+    if (kind < 0.5) {
+      const pot = [900, 1200, 1500, 2000, 2400, 3000][(Math.random() * 6) | 0];
+      const frac = [0.33, 0.5, 0.66, 1][(Math.random() * 4) | 0];
+      const bet = Math.round(pot * frac / 100) * 100;
+      const need = (bet / (pot + bet + bet)) * 100;
+      const opts = [need, need + 8, need - 6, need + 16].map(x => Math.max(4, x));
+      const labelled = opts.map((v, i) => ({ v: v.toFixed(0) + '%', right: i === 0 }));
+      for (let i = labelled.length - 1; i > 0; i--) {
+        const j = (Math.random() * (i + 1)) | 0;
+        [labelled[i], labelled[j]] = [labelled[j], labelled[i]];
+      }
+      return {
+        cat: 'odds', cards: null,
+        sit: `Pot is <b>${pot}</b> · opponent bets <b>${bet}</b>`,
+        q: 'How much equity do you need to call?',
+        choices: labelled.map(l => l.v),
+        correct: labelled.findIndex(l => l.right),
+        marginal: false,
+        why: () => `You call ${bet} to win a pot that will be ${pot + bet + bet} after your call, so you need ${bet} ÷ ${pot + bet + bet} = ${need.toFixed(0)}%. The trap is dividing by the pot before your own call — that always makes the price look better than it is.`
+      };
+    }
+    const draws = [
+      ['a flush draw', 9, 'nine cards complete it'],
+      ['an open-ended straight draw', 8, 'eight cards complete it'],
+      ['a gutshot', 4, 'four cards complete it'],
+      ['two overcards', 6, 'six cards pair you up']
+    ];
+    const d = draws[(Math.random() * draws.length) | 0];
+    const pot = [1000, 1600, 2000, 2800][(Math.random() * 4) | 0];
+    const frac = [0.4, 0.5, 0.75, 1][(Math.random() * 4) | 0];
+    const bet = Math.round(pot * frac / 100) * 100;
+    const need = (bet / (pot + bet + bet)) * 100;
+    const eq = d[1] * 2;
+    return {
+      cat: 'odds', cards: null,
+      sit: `Turn · you have <b>${d[0]}</b> · pot <b>${pot}</b> · they bet <b>${bet}</b>`,
+      q: 'Call or fold on pot odds alone?',
+      choices: ['Call', 'Fold'],
+      correct: eq >= need ? 0 : 1,
+      marginal: Math.abs(eq - need) <= 3,
+      why: () => `${d[2]}, so with one card to come you have roughly ${d[1]} × 2 = ${eq}%. You need ${need.toFixed(0)}% to call. ${eq >= need ? 'The price is good enough on its own.' : 'The price is not there — you would need implied odds or fold equity to continue.'}`
+    };
+  }
+
+  function nextQuestion() {
+    const roll = Math.random();
+    current = roll < 0.37 ? qRFI() : roll < 0.72 ? qPush() : qOdds();
+    answered = false;
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const c = current;
+    $('cat-label').textContent = CATS[c.cat];
+    const streak = currentStreak();
+    $('streak').textContent = streak >= 3 ? streak + ' in a row' : '';
+    $('q').innerHTML = `
+      <div class="situation"><div class="sit-line">${c.sit}</div></div>
+      ${c.cards ? `<div class="hand">${c.cards.map(cardHTML).join('')}</div>` : '<div style="height:14px"></div>'}
+      <div class="qbox">${c.q}</div>
+      <div class="choices${c.choices.length > 2 ? '' : ' two-up'}" id="choices">
+        ${c.choices.map((t, i) => `<button class="ch" data-i="${i}">${t}</button>`).join('')}
+      </div>
+      <div id="fb"></div>`;
+    document.querySelectorAll('#choices .ch').forEach(b =>
+      b.addEventListener('click', () => answer(parseInt(b.dataset.i, 10))));
+  }
+
+  async function answer(i) {
+    if (answered) return;
+    answered = true;
+    const c = current;
+    const ok = i === c.correct || c.marginal;
+    document.querySelectorAll('#choices .ch').forEach(b => {
+      const bi = parseInt(b.dataset.i, 10);
+      b.disabled = true;
+      if (bi === c.correct) b.classList.add('right');
+      else if (bi === i) b.classList.add('wrong');
+      else b.classList.add('dim');
+    });
+    data.attempts.push({ t: Date.now(), cat: c.cat, ok: ok });
+    if (data.attempts.length > 600) data.attempts = data.attempts.slice(-600);
+    await save();
+
+    const cls = c.marginal ? 'mid' : ok ? 'ok' : 'no';
+    const head = c.marginal
+      ? (i === c.correct ? 'Right — and it is close' : 'Close enough — counted as right')
+      : ok ? 'Correct' : 'Not quite';
+    const extra = c.marginal ? ' This hand sits on the boundary, so either answer is defensible. Table dynamics decide it.' : '';
+    $('fb').innerHTML = `<div class="fb ${cls}">
+      <div class="verdict">${head}</div>
+      <div class="why">${c.why()}${extra}</div></div>
+      <button class="go" id="next">Next spot</button>`;
+    $('next').addEventListener('click', () => { nextQuestion(); renderProgress(); });
+    $('next').focus();
+    renderProgress();
+  }
+
+  function currentStreak() {
+    let s = 0;
+    for (let i = data.attempts.length - 1; i >= 0; i--) {
+      if (data.attempts[i].ok) s++; else break;
+    }
+    return s;
+  }
+
+  /* ---------- progress ---------- */
+  function renderProgress() {
+    const a = data.attempts;
+    const box = $('trend');
+    if (a.length < 20) {
+      box.innerHTML = `<p class="empty">First bar appears at 20 drills. ${20 - a.length} to go.</p>`;
+    } else {
+      const blocks = [];
+      for (let i = 0; i + 20 <= a.length; i += 20) blocks.push(a.slice(i, i + 20));
+      const W = 640, H = 160, P = { t: 12, r: 8, b: 24, l: 30 };
+      const bw = (W - P.l - P.r) / blocks.length;
+      let svg = `<line x1="${P.l}" x2="${W - P.r}" y1="${P.t + (H - P.t - P.b) * 0.5}" y2="${P.t + (H - P.t - P.b) * 0.5}" stroke="#232733" stroke-width="1"/>
+        <text x="${P.l - 6}" y="${P.t + (H - P.t - P.b) * 0.5 + 4}" text-anchor="end" fill="#878DA0" font-size="10" font-family="JetBrains Mono, monospace">50</text>
+        <text x="${P.l - 6}" y="${P.t + 8}" text-anchor="end" fill="#878DA0" font-size="10" font-family="JetBrains Mono, monospace">100</text>`;
+      blocks.forEach((bl, i) => {
+        const acc = bl.filter(x => x.ok).length / bl.length;
+        const h = acc * (H - P.t - P.b);
+        const x = P.l + i * bw + bw * 0.16, w = bw * 0.68;
+        const col = acc >= 0.8 ? '#35A86B' : acc >= 0.6 ? '#E5B93C' : '#DF4A44';
+        svg += `<rect x="${x.toFixed(1)}" y="${(H - P.b - h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="${col}" rx="2"/>
+          <text x="${(x + w / 2).toFixed(1)}" y="${H - 7}" text-anchor="middle" fill="#878DA0" font-size="10" font-family="JetBrains Mono, monospace">${i + 1}</text>`;
+      });
+      box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Accuracy across ${blocks.length} blocks of twenty drills">${svg}</svg>`;
+    }
+
+    // by category
+    const cbox = $('cats');
+    const rows = Object.keys(CATS).map(k => {
+      const list = a.filter(x => x.cat === k).slice(-60);
+      if (!list.length) return `<div class="brow"><span class="blab">${CATS[k]}</span>
+        <div class="btrack"></div><span class="bval">—</span></div>`;
+      const acc = list.filter(x => x.ok).length / list.length * 100;
+      const col = acc >= 80 ? '#35A86B' : acc >= 60 ? '#E5B93C' : '#DF4A44';
+      return `<div class="brow"><span class="blab">${CATS[k]}</span>
+        <div class="btrack"><div class="bfill" style="width:${acc.toFixed(0)}%;background:${col}"></div></div>
+        <span class="bval" style="color:${col}">${acc.toFixed(0)}%</span></div>`;
+    });
+    cbox.innerHTML = rows.join('');
+
+    // tiles
+    const last50 = a.slice(-50), prev50 = a.slice(-100, -50);
+    const accOf = l => l.length ? l.filter(x => x.ok).length / l.length * 100 : 0;
+    const now = accOf(last50), before = accOf(prev50);
+    const delta = prev50.length >= 20 ? now - before : 0;
+    let bestStreak = 0, run = 0;
+    a.forEach(x => { if (x.ok) { run++; bestStreak = Math.max(bestStreak, run); } else run = 0; });
+    $('tiles').innerHTML = [
+      ['Drills', a.length, 'answered', ''],
+      ['Accuracy', a.length ? accOf(last50).toFixed(0) + '%' : '—', 'last 50', ''],
+      ['Trend', delta ? (delta > 0 ? '+' : '') + delta.toFixed(0) + ' pts' : '—',
+        delta ? 'vs the 50 before' : 'needs 70 drills', delta > 0 ? 'pos' : delta < 0 ? 'neg' : ''],
+      ['Best run', bestStreak, 'correct in a row', '']
+    ].map(([l, v, s, c]) => `<div class="tile"><div class="cap">${l}</div>
+      <div class="tile-v ${c}">${v}</div><div class="tile-s">${s}</div></div>`).join('');
+
+    // advice
+    const scored = Object.keys(CATS).map(k => {
+      const list = a.filter(x => x.cat === k).slice(-60);
+      return { k: k, n: list.length, acc: list.length ? list.filter(x => x.ok).length / list.length * 100 : null };
+    }).filter(x => x.n >= 10);
+    const abox = $('advice');
+    if (!scored.length) {
+      abox.innerHTML = `<p class="empty">Answer thirty or so and this will tell you which area is costing you most.</p>`;
+    } else {
+      scored.sort((x, y) => x.acc - y.acc);
+      const w = scored[0];
+      const [name, url] = STUDY[w.k];
+      abox.innerHTML = `<p class="hint" style="margin-bottom:8px">Weakest area: <strong style="color:var(--text)">${CATS[w.k]}</strong> at ${w.acc.toFixed(0)}%.</p>
+        <p class="hint" style="margin:0">Work on <a href="${url}" target="_blank" rel="noopener" style="color:var(--gold)">${name}</a>${w.acc >= 80 ? ' — though at this accuracy you are in good shape across the board.' : '. Twenty minutes there will move this number more than another hundred drills.'}</p>`;
+    }
+
+    const s = data.sessions.length;
+    $('count').textContent = `${a.length} drills · ${s} session${s === 1 ? '' : 's'} · ${data.results.length} result${data.results.length === 1 ? '' : 's'}`;
+  }
+
+  /* ---------- sessions ---------- */
+  const SV = { good: ['Played well', '#35A86B'], mixed: ['Mixed', '#E5B93C'], tilt: ['Lost the plot', '#DF4A44'] };
+  document.querySelectorAll('.tr .v').forEach(b => {
+    b.addEventListener('click', async () => {
+      data.sessions.push({ id: Date.now(), date: new Date().toISOString().slice(0, 10), v: b.dataset.v });
+      await save(); renderSessions(); renderProgress(); toast('Logged');
+    });
+  });
+
+  function renderSessions() {
+    const box = $('sessions');
+    const list = data.sessions.slice(-10).reverse();
+    if (!list.length) { box.innerHTML = `<p class="empty">Nothing logged yet.</p>`; return; }
+    const last10 = data.sessions.slice(-10);
+    const tilt = last10.filter(x => x.v === 'tilt').length;
+    const banner = tilt >= 4
+      ? `<p class="hint">${tilt} of your last ${last10.length} sessions went sideways. That is a schedule problem, not a strategy one — shorter sessions, fewer tables.</p>` : '';
+    box.innerHTML = banner + list.map(s => `
+      <div class="row">
+        <div class="bar3" style="background:${SV[s.v][1]}"></div>
+        <div class="row-main">${SV[s.v][0]}</div>
+        <span class="row-date">${s.date}</span>
+        <button class="quiet" data-del="${s.id}" aria-label="Delete">×</button>
+      </div>`).join('');
+    box.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
+      data.sessions = data.sessions.filter(x => String(x.id) !== b.dataset.del);
+      await save(); renderSessions(); renderProgress();
+    }));
+  }
+
+  /* ---------- results ---------- */
+  let resType = 'cash';
+  document.querySelectorAll('#seg-type button').forEach(b => {
+    b.addEventListener('click', () => {
+      resType = b.dataset.t;
+      document.querySelectorAll('#seg-type button').forEach(x => x.classList.toggle('on', x === b));
+      $('wrap-buyin').style.display = resType === 'free' ? 'none' : 'block';
+    });
+  });
+
+  $('r-save').addEventListener('click', async () => {
+    const field = parseInt($('r-field').value, 10);
+    const finish = parseInt($('r-finish').value, 10);
+    const msg = $('r-msg');
+    if (!field || !finish) {
+      msg.textContent = 'Field size and finishing position are both needed.';
+      msg.style.color = '#DF4A44'; return;
+    }
+    if (finish > field) {
+      msg.textContent = 'You cannot finish below the number of players in the field.';
+      msg.style.color = '#DF4A44'; return;
+    }
+    const rank = parseInt($('r-rank').value, 10) || null;
+    data.results.push({
+      id: Date.now(),
+      date: $('r-date').value || new Date().toISOString().slice(0, 10),
+      type: resType,
+      buyin: resType === 'free' ? 0 : (parseFloat($('r-buyin').value) || 0),
+      field: field, finish: finish,
+      bb: parseInt($('r-bb').value, 10) || 0,
+      won: parseFloat($('r-won').value) || 0,
+      rank: rank
+    });
+    await save();
+    ['r-field', 'r-finish', 'r-won', 'r-rank'].forEach(id => $(id).value = '');
+    renderResults(); renderProgress();
+    msg.textContent = 'Saved';
+    msg.style.color = '#35A86B';
+    setTimeout(() => { msg.textContent = ''; }, 2200);
+  });
+
+  const pctOf = r => (r.finish / r.field) * 100;
+  const byDate = () => data.results.slice()
+    .sort((a, b) => (a.date || '').localeCompare(b.date || '') || a.id - b.id);
+
+  function lineChart(points, colorFn, label, invert) {
+    if (points.length < 2) return `<p class="empty">Two results needed before a line appears.</p>`;
+    const W = 640, H = 170, P = { t: 14, r: 12, b: 24, l: 34 };
+    const vals = points.map(p => p.v);
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    if (hi === lo) { hi += 1; lo -= 1; }
+    const pad = (hi - lo) * 0.15; lo -= pad; hi += pad;
+    if (invert) lo = Math.max(0, lo);
+    const sx = i => P.l + (i / Math.max(1, points.length - 1)) * (W - P.l - P.r);
+    const sy = v => invert
+      ? P.t + ((v - lo) / (hi - lo)) * (H - P.t - P.b)
+      : P.t + (1 - (v - lo) / (hi - lo)) * (H - P.t - P.b);
+
+    let grid = '';
+    for (let k = 0; k <= 2; k++) {
+      const v = lo + (k / 2) * (hi - lo);
+      grid += `<line x1="${P.l}" x2="${W - P.r}" y1="${sy(v).toFixed(1)}" y2="${sy(v).toFixed(1)}" stroke="#232733"/>
+        <text x="${P.l - 6}" y="${(sy(v) + 4).toFixed(1)}" text-anchor="end" fill="#878DA0" font-size="10" font-family="JetBrains Mono, monospace">${v.toFixed(0)}</text>`;
+    }
+    let path = '', dots = '';
+    points.forEach((p, i) => {
+      path += (i ? 'L' : 'M') + sx(i).toFixed(1) + ' ' + sy(p.v).toFixed(1) + ' ';
+      dots += `<circle cx="${sx(i).toFixed(1)}" cy="${sy(p.v).toFixed(1)}" r="3.5" fill="${colorFn(p)}"/>`;
+    });
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">
+      ${grid}<path d="${path}" fill="none" stroke="#3C4354" stroke-width="1.5" stroke-linejoin="round"/>${dots}</svg>`;
+  }
+
+  function renderResults() {
+    const rs = byDate();
+
+    $('r-chart').innerHTML = lineChart(
+      rs.map(r => ({ v: pctOf(r), t: r.type })),
+      p => p.t === 'free' ? '#3E8BD9' : '#E5B93C',
+      'Finish percentile over time, lower is better', true);
+
+    const ranked = rs.filter(r => r.rank);
+    $('r-rankchart').innerHTML = ranked.length >= 2
+      ? lineChart(ranked.map(r => ({ v: r.rank })), () => '#35A86B', 'CoinPoker rank over time', true)
+      : `<p class="empty">Add your rank on two or more results and the line appears here.</p>`;
+
+    const split = ['cash', 'free'].map(t => {
+      const list = rs.filter(r => r.type === t);
+      const name = t === 'cash' ? 'Cash buy-ins' : 'Freerolls';
+      if (!list.length) return `<div class="brow"><span class="blab">${name}</span>
+        <div class="btrack"></div><span class="bval">—</span></div>`;
+      const avg = list.reduce((s, r) => s + pctOf(r), 0) / list.length;
+      const best = Math.min(...list.map(pctOf));
+      const recent = list.slice(-10);
+      const recentAvg = recent.reduce((s, r) => s + pctOf(r), 0) / recent.length;
+      const col = t === 'cash' ? '#E5B93C' : '#3E8BD9';
+      const invested = list.reduce((s, r) => s + r.buyin, 0);
+      const won = list.reduce((s, r) => s + r.won, 0);
+      const cashes = list.filter(r => r.won > 0).length;
+      return `<div style="margin-bottom:14px">
+        <div class="brow"><span class="blab">${name}</span>
+          <div class="btrack"><div class="bfill" style="width:${Math.max(3, 100 - avg).toFixed(0)}%;background:${col}"></div></div>
+          <span class="bval" style="color:${col}">top ${avg.toFixed(0)}%</span></div>
+        <div class="tile-s" style="padding-left:2px">${list.length} event${list.length === 1 ? '' : 's'} ·
+          last 10 avg top ${recentAvg.toFixed(0)}% · best top ${best.toFixed(1)}% ·
+          cashed ${cashes}${t === 'cash' && invested > 0 ? ` · $${won.toFixed(2)} back on $${invested.toFixed(2)}` : ''}</div>
+      </div>`;
+    });
+
+    const total = rs.length;
+    const note = total < 30
+      ? `<p class="hint" style="margin:6px 0 0">${total} event${total === 1 ? '' : 's'} logged. Percentile needs about 30 before the average stops jumping around, and a lot more before profit means anything.</p>`
+      : `<p class="hint" style="margin:6px 0 0">${total} events. The percentile average is starting to hold still — compare the last 10 against the overall figure to see direction.</p>`;
+    $('r-split').innerHTML = split.join('') + note;
+
+    const box = $('r-list');
+    const list = rs.slice(-10).reverse();
+    if (!list.length) { box.innerHTML = `<p class="empty">Nothing logged yet.</p>`; return; }
+    box.innerHTML = list.map(r => {
+      const col = r.type === 'free' ? '#3E8BD9' : '#E5B93C';
+      const net = r.won - r.buyin;
+      return `<div class="row">
+        <div class="bar3" style="background:${col}"></div>
+        <div class="row-main">
+          <div>${r.finish} of ${r.field} <span style="color:var(--dim);font-size:12px">· top ${pctOf(r).toFixed(0)}%</span></div>
+          <div class="tile-s">${r.type === 'free' ? 'Freeroll' : '$' + r.buyin.toFixed(2)}${r.bb ? ' · ' + r.bb + 'bb start' : ''}${r.won > 0 ? ` · won $${r.won.toFixed(2)}` : ''}${r.rank ? ' · rank ' + r.rank : ''}</div>
+        </div>
+        <span class="row-date">${r.date}</span>
+        <button class="quiet" data-rdel="${r.id}" aria-label="Delete">×</button>
+      </div>`;
+    }).join('');
+    box.querySelectorAll('[data-rdel]').forEach(b => b.addEventListener('click', async () => {
+      data.results = data.results.filter(x => String(x.id) !== b.dataset.rdel);
+      await save(); renderResults(); renderProgress();
+    }));
+  }
+
+  /* ---------- shell ---------- */
+  document.querySelectorAll('.tr .tab').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.tr .tab').forEach(x => x.classList.toggle('on', x === b));
+      document.querySelectorAll('.tr .pane').forEach(p => p.classList.toggle('on', p.id === 'p-' + b.dataset.p));
+    });
+  });
+
+  $('clear').addEventListener('click', async () => {
+    if (!confirm('Delete all drill history, sessions and tournament results?')) return;
+    data = { attempts: [], sessions: [], results: [] };
+    try { await store.delete(KEY); } catch (e) {}
+    renderProgress(); renderSessions(); renderResults(); toast('Reset');
+  });
+
+  $('r-date').value = new Date().toISOString().slice(0, 10);
+  nextQuestion();
+  renderProgress();
+  renderSessions();
+  renderResults();
+  load().then(() => { renderProgress(); renderSessions(); renderResults(); });
+})();
+</script>
